@@ -1,45 +1,45 @@
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Serilog;
 
 namespace ELK.Example.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-
+    [Route("[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-        private readonly Serilog.ILogger _logger;
-
-        private static readonly string[] Summaries = new[]
+        private static List<WeatherForecast> _weatherForecasts = new List<WeatherForecast>
         {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-
-        public WeatherForecastController()
-        {
-            _logger = new LoggerConfiguration()
-            .WriteTo.Http("http://localhost:5044", 1)
-                .MinimumLevel.Information()
-            .Enrich.FromLogContext()
-            .CreateLogger();
-        }
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            _logger.Information(JsonConvert.SerializeObject("Nunca mais eu vou salvar logs no banco de dados!"));
-
-            var lista = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            new WeatherForecast
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-
-            return lista;
+                Id = 1,
+                Date = new DateTime(2023, 08, 05),
+                TemperatureC = 30,
+                Summary = "Hot"
+            },
+            new WeatherForecast
+            {
+                Id = 2,
+                Date = new DateTime(2023, 08, 06),
+                TemperatureC = 25,
+                Summary = "Warm"
+            }
+        };
+        [HttpGet]
+        public IActionResult GetAllWeatherForecasts()
+        {
+            return Ok(_weatherForecasts);
+        }
+        [HttpGet("{id}")]
+        public IActionResult GetWeatherForecastById(int id)
+        {
+            //Não vamos nos preocupar com validações.
+            return Ok(_weatherForecasts.Find(w => w.Id == id));
+        }
+        [HttpPost]
+        public IActionResult AddWeatherForecast(WeatherForecast weatherForecast)
+        {
+            //Não vamos nos preocupar com validações.
+            _weatherForecasts.Add(weatherForecast);
+            return Ok(weatherForecast);
         }
     }
 }
