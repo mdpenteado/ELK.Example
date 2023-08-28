@@ -1,22 +1,19 @@
-﻿using Newtonsoft.Json;
-using Serilog;
+﻿using ELK.Example.Domain.Ports.Input;
+using ELK.Example.ELK.Example.Adapter.Logs;
+using ELK.Example.ELK.Example.Adapter.Logs.Facades;
 using System.Text;
 
-namespace ELK.Example
+namespace ELK.Example.Infrastructure.Middleware
 {
     public class RequestResponseLoggingMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly Serilog.ILogger _logger;
-        public RequestResponseLoggingMiddleware(RequestDelegate next)
+        private readonly ILogFacade _logFacade;
+        public RequestResponseLoggingMiddleware(RequestDelegate next,
+                                                ILogFacade logFacade)
         {
             _next = next;
-
-            _logger = new LoggerConfiguration()
-                .WriteTo.LogstashHttp("http://localhost:5044")
-                .MinimumLevel.Information()
-            .Enrich.FromLogContext()
-            .CreateLogger();
+            _logFacade = logFacade;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -48,12 +45,12 @@ namespace ELK.Example
             var requestBody = await requestBodyStream.ReadToEndAsync();
             request.Body.Position = 0;
 
-            var logMessage = new StringBuilder();
-            logMessage.AppendLine($"Request Method: {request.Method}");
-            logMessage.AppendLine($"Request Path: {request.Path}");
-            logMessage.AppendLine($"Request Body: {requestBody}");
+            var log = new LogModel();
+            log.Path = request.Path;
+            log.Body = requestBody;
+            log.Method = request.Method;
 
-            _logger.Information(JsonConvert.SerializeObject(logMessage));
+            _logFacade.CreateLog(log);
         }
 
         private async Task LogResponse(HttpResponse response)
@@ -66,7 +63,11 @@ namespace ELK.Example
             logMessage.AppendLine($"Response Status Code: {response.StatusCode}");
             logMessage.AppendLine($"Response Body: {responseBody}");
 
-            _logger.Information(JsonConvert.SerializeObject(logMessage));
+            var log = new LogModel();
+            log.StatusCode = response.StatusCode;
+            log.Body = responseBody;
+
+            _logFacade.CreateLog(log);
         }
     }
 }

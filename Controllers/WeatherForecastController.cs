@@ -1,3 +1,5 @@
+using ELK.Example.Domain.Ports.Output;
+using ELK.Example.ELK.Example.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ELK.Example.Controllers
@@ -6,39 +8,27 @@ namespace ELK.Example.Controllers
     [Route("[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static List<WeatherForecast> _weatherForecasts = new List<WeatherForecast>
+        private readonly IWeatherForecastsInputPort _forecastInputPort;
+
+        public WeatherForecastController(IWeatherForecastsInputPort forecastInputPort)
         {
-            new WeatherForecast
-            {
-                Id = 1,
-                Date = new DateTime(2023, 08, 05),
-                TemperatureC = 30,
-                Summary = "Hot"
-            },
-            new WeatherForecast
-            {
-                Id = 2,
-                Date = new DateTime(2023, 08, 06),
-                TemperatureC = 25,
-                Summary = "Warm"
-            }
-        };
+            _forecastInputPort = forecastInputPort;
+        }
+
         [HttpGet]
         public IActionResult GetAllWeatherForecasts()
         {
-            return Ok(_weatherForecasts);
+            return Ok(_forecastInputPort.GetAllWeatherForecasts());
         }
         [HttpGet("{id}")]
         public IActionResult GetWeatherForecastById(int id)
         {
             //Não vamos nos preocupar com validações.
-            return Ok(_weatherForecasts.Find(w => w.Id == id));
+            return Ok(_forecastInputPort.GetWeatherForecastById(id));
         }
         [HttpPost]
-        public IActionResult AddWeatherForecast(WeatherForecast weatherForecast)
+        public IActionResult AddWeatherForecast(WeatherForecastModel weatherForecast)
         {
-            //Não vamos nos preocupar com validações.
-            _weatherForecasts.Add(weatherForecast);
             return Ok(weatherForecast);
         }
     }

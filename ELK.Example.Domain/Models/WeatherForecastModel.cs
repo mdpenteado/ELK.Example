@@ -1,6 +1,6 @@
-namespace ELK.Example
+namespace ELK.Example.ELK.Example.Domain.Models
 {
-    public class WeatherForecast
+    public class WeatherForecastModel
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
